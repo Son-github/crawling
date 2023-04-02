@@ -19,6 +19,14 @@ driver.find_element(By.XPATH,'//*[@id="container"]/form/div/div/div/iframe').cli
 sleep(10)
 driver.find_element(By.XPATH,'//*[@id="container"]/form/p[3]/input').click()
 
+keyword = ['쉐어하우스', '집콕', '홈술', '편의점', '식단', '재활용', '배민','혼밥', '방음', '밥해결', '집들이', '정수기', '행거', '빨래']
+key=['인테리어소품', '셀프인테리어', '셀프리모델링', '가구배치', '구축리모델링', '알파룸', '아파트게스트룸', '쉐어하우스', '테라스', '베란다확장', '이케아가구', '신혼가전', '원룸가구', '빌트인']
+key_keywords = []
+for i in key:
+    for j in keyword:
+        key_keywords.append(i + '+' + j)
+final_keywords = key + keyword + key_keywords
+
 #크롤링 함수
 def next_page():
     current = driver.current_url
@@ -27,6 +35,8 @@ def next_page():
     soup = BeautifulSoup(res, "html.parser")
     data_url = soup.select('#container > div.wrap.articles > article > a') #페이지에 있는 글의 url 가져오기
     data_url_list = []
+    if len(data_url) == 0:
+        return False
     for i in range(len(data_url)):
         data_url_list.append('https://everytime.kr' + data_url[i].get('href')) #url을 하이퍼링크로 전환하여 data_url_list에 넣기
         url_list.append('https://everytime.kr' + data_url[i].get('href'))
@@ -39,94 +49,123 @@ def next_page():
         comment_time = driver.find_element(By.CSS_SELECTOR, 'time.large').text
 
         if comment_num == 0: #댓글의 갯수가 0일 때
+            a = []
             if len(name) == 0: #소제목이 없을 때
+                a.append(" ")
+                a.append(text)
+                b = ",".join(a)
                 comment_num_list.append(comment_num)
-                name_list.append(" ")
-                text_list.append(text)
+                #name_list.append(" ")
+                #text_list.append(text)
                 comment_time_list.append(comment_time)
-                comment_list.append(" ")
+                comment_list.append(b)
 
             else:
+                a.append(name[0].text)
+                a.append(text)
+                b = ",".join(a)
                 comment_num_list.append(comment_num)
-                name_list.append(name[0].text)
-                text_list.append(text)
+                #name_list.append(name[0].text)
+                #text_list.append(text)
                 comment_time_list.append(comment_time)
-                comment_list.append(" ")
+                comment_list.append(b)
 
         elif comment_num == 1: #댓글의 갯수가 1일 때
             try:
                 comment = driver.find_element(By.CSS_SELECTOR, '#container > div.wrap.articles > article > div > article > p').text #댓글 크롤링
                 a = []
                 if len(name) == 0: #소제목이 없을 때
+                    a.append(" ")
+                    a.append(text)
                     a.append(comment)
+                    b = ",".join(a)
                     comment_num_list.append(comment_num)
-                    name_list.append(" ")
-                    text_list.append(text)
+                    #name_list.append(" ")
+                    #text_list.append(text)
                     comment_time_list.append(comment_time)
-                    comment_list.append(a)
+                    comment_list.append(b)
 
                 else:
+                    a.append(name[0].text)
+                    a.append(text)
                     a.append(comment)
+                    b = ",".join(a)
                     comment_num_list.append(comment_num)
-                    name_list.append(name[0].text)
-                    text_list.append(text)
+                    #name_list.append(name[0].text)
+                    #text_list.append(text)
                     comment_time_list.append(comment_time)
-                    comment_list.append(a)
+                    comment_list.append(b)
 
             except:
                 pass
         elif comment_num > 1: #댓글의 갯수가 1이상 일 때
             try:
                 comments = driver.find_elements(By.CSS_SELECTOR, '#container > div.wrap.articles > article > div > article > p') #댓글들을 list형태로 크롤링
+                a = []
                 if len(name) == 0: #소제목이 없을 때
-                    a = []
+                    a.append(" ")
+                    a.append(text)
+
                     for j in range(len(comments)):  # 댓글을 차례대로 append
                         a.append(comments[j].text)
+                    b = ",".join(a)
                     comment_num_list.append(comment_num)
-                    name_list.append(" ")
-                    text_list.append(text)
+                    #name_list.append(" ")
+                    #text_list.append(text)
                     comment_time_list.append(comment_time)
-                    comment_list.append(a)
+                    comment_list.append(b)
 
                 else:
-                    a = []
+                    a.append(name[0].text)
+                    a.append(text)
                     for j in range(len(comments)): #댓글을 차례대로 append
                         a.append(comments[j].text)
+                    b = ",".join(a)
                     comment_num_list.append(comment_num)
-                    name_list.append(name[0].text)
-                    text_list.append(text)
+                    #name_list.append(name[0].text)
+                    #text_list.append(text)
                     comment_time_list.append(comment_time)
-                    comment_list.append(a)
+                    comment_list.append(b)
 
             except:
                 pass
     driver.get(current)
     driver.find_element(By.CSS_SELECTOR, 'a.next').click()
 
-keywords = ["자취", "취두부"]
+comment_num_list = []
+#name_list = []
+#text_list = []
+comment_time_list = []
+comment_list = []
+url_list = []
 
-for i in keywords:
-    comment_num_list = []
-    name_list = []
-    text_list = []
-    comment_time_list = []
-    comment_list = []
-    url_list = []
+for i in final_keywords:
+
     #전체검색어에 키워드 입력
     driver.find_element(By.CSS_SELECTOR,"#container > div.rightside > form > input").send_keys(i)
     driver.find_element(By.CSS_SELECTOR,"#container > div.rightside > form > input").send_keys(Keys.ENTER)
-    for _ in range(2):
-        next_page()
-        if len(driver.find_elements(By.CSS_SELECTOR, 'a.next')) == 0:
-            break
-    df = pd.DataFrame({
-        'comment_num' : comment_num_list,
-        'title' : name_list,
-        'body' : text_list,
-        'url' : url_list,
-        'comment' : comment_list,
-        'comment_time' : comment_time_list
-    })
-    df.to_csv("everytime_crawling" + "_"+ i + ".csv", encoding='utf-8-sig')
+    for _ in range(1):
+        if next_page() == False:
+            pass
+        else:
+            next_page()
+            if len(driver.find_elements(By.CSS_SELECTOR, 'a.next')) == 0:
+                break
+
+df = pd.DataFrame({
+    'comment_num': comment_num_list,
+    #'title': name_list,
+    #'body': text_list,
+    'url': url_list,
+    'comment': comment_list,
+    'comment_time': comment_time_list
+})
+df.to_csv("everytime_crawling.csv", encoding='utf-8-sig')
 driver.quit()
 
+df = pd.read_csv('everytime_crawling.csv', encoding='utf-8-sig', index_col=0)
+for i in df['comment_time']:
+    if len(i) == 11:
+        df = df.replace(i,'2023.'+i[0:2]+'.'+i[3:5])
+    else:
+        df = df.replace(i, '20'+i[0:2]+'.'+i[3:5]+'.'+i[6:8])
